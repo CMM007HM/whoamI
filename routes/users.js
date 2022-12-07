@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const auth = require("../middleware/auth");
+const nodemailer = require('nodemailer');
 const admin = require("../middleware/admin");
 const config = require("config");
 const express = require('express');
@@ -8,6 +9,14 @@ const _ = require("lodash");
 const router = express.Router();
 const {User, validate} = require('../models/users');
 const {Company} = require("../models/companies");
+
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'tflux2011@gmail.com',
+      pass: '@rianna2016'
+    }
+  });
  
 router.get("/me", auth, async(req, res)=>{
     const user = await User.findById(req.user._id).select("-password -__v");
@@ -65,7 +74,22 @@ router.post("/", async(req, res) => {
         company: _.pick(company, ["_id", "companyName"]),
         status: true
     }
-    
+
+    var mailOptions = {
+        from: 'tflux2011@gmail.com',
+        to: req.body.email,
+        subject: 'Your account was created successfully',
+        text: 'Your account was created successfully.'
+    };
+      
+    transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
+
     res.header("x-auth-token", token).send(data);
 });
 
